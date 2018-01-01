@@ -17,16 +17,17 @@ The Idea behind this module is to create a motion detection camera
    1. ` 
    conf = {
     "show_video": True,
-    "use_dropbox": True,
-    "dropbox_access_token": "YOUR_DROPBOX_KEY",
-    "dropbox_base_path": "YOUR_DROPBOX_PATH",
     "min_upload_seconds": 3.0,
     "min_motion_frames": 8,
     "camera_warmup_time": 2.5,
     "delta_thresh": 5,
-    "resolution": [640, 480],
-    "fps": 16,
-    "min_area": 5000} 
+    "motion_detection": True,
+    "display_text_if_occupied": "occupied",
+    "display_text_if_unoccupied": "unoccupied",
+    "min_email_seconds": 3000,
+    "email_images": False,
+    "min_area": 5000,
+}
     `
 1. create the camera object and initialise()
    1. c = Camera(0,**conf)
