@@ -1,7 +1,8 @@
 import cv2
 from datetime import date, datetime
 import imutils
-from threading import Thread
+from glob import glob
+import sys
 
 
 class Camera:
@@ -87,3 +88,19 @@ class Camera:
             cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
         return motion_detected, frame, text
+
+    @staticmethod
+    def count_system_cameras(path='/dev/video*'):
+        print("counting number of camera's available under the following path {path}".format(path=path))
+        camera_positions = []
+        cameras = glob(path)
+        if cameras:
+            print('{camera} found'.format(camera=len(cameras)))
+            for camera in cameras:
+                camera_positions.append(int(camera[-1:]))
+        else:
+            print("No cameras available exiting ....")
+            sys.exit([1])
+        return camera_positions
+
+
