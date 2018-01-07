@@ -43,7 +43,8 @@ class Camera:
                 avg = gray.copy().astype("float")
                 continue
             if self.motion_detection:
-                self.motion_detector(gray, avg, frame, text)
+                result = self.motion_detector(gray, avg, frame, text)
+                text = result[2]
 
             # draw the text and timestamp on the frame
             ts = timestamp.strftime("%A %d %B %Y %I:%M:%S%p")
