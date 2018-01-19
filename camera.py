@@ -1,12 +1,18 @@
 import cv2
-from datetime import date, datetime
+from datetime import datetime
 import imutils
 from glob import glob
 import sys
+import requests
+import threading
+import socket
+
+thread_counter = []
+
 
 
 class Camera:
-    def __init__(self, camera_number, display_on_web=False, *args, **kwargs):
+    def __init__(self, camera_number, display_on_web=False, stream_port=0, *args, **kwargs):
         """
         :param camera_number: Video camera ID
         :param args:
@@ -26,10 +32,18 @@ class Camera:
         self.display_on_web = display_on_web
         print('Setting up camera {camera_number}'.format(camera_number=camera_number))
         self.capture = cv2.VideoCapture(camera_number)
+        self.initialize_stream = kwargs.get('create_stream')
+        self.stream_port = stream_port
+        self.client_socket = None
+
+        if self.initialize_stream:
+            print('creating stream ...')
+            self.create_stream()
 
     def initialise_camera(self):
         avg = None
         while True:
+            # print(len(thread_counter))
             text = self.display_text_if_unoccupied
             timestamp = datetime.now()
             # self.capture frame-by-frame
@@ -53,6 +67,9 @@ class Camera:
             cv2.putText(frame, ts, (10, frame.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (0, 0, 255), 1)
 
             cv2.imshow('frame', frame)
+
+            if self.initialize_stream:
+                self.client_socket.send(frame)
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
@@ -88,6 +105,20 @@ class Camera:
             cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
         return motion_detected, frame, text
+
+    def create_stream(self):
+        if self.stream_port == 0:
+            print("Port stream port is not set, canceling socket set up....")
+            self.initialize_stream = False
+            return False
+        server_address = "0.0.0.0.0", self.stream_port
+        self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        print('Connection established, streaming to port {port}'.format(port=self.stream_port))
+        try:
+            self.client_socket.connect(server_address)
+        except socket as ex:
+            self.initialize_stream = False
+            print('Failed to create socket connection', ex)
 
     @staticmethod
     def count_system_cameras(path='/dev/video*'):
