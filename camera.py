@@ -3,16 +3,12 @@ from datetime import datetime
 import imutils
 from glob import glob
 import sys
-import requests
-import threading
 import socket
-
-thread_counter = []
-
+from struct import pack
 
 
 class Camera:
-    def __init__(self, camera_number, display_on_web=False, stream_port=0, *args, **kwargs):
+    def __init__(self, camera_number, initialize_stream=False, stream_port=0, *args, **kwargs):
         """
         :param camera_number: Video camera ID
         :param args:
@@ -29,16 +25,25 @@ class Camera:
         self.display_text_if_unoccupied = kwargs.get('display_text_if_unoccupied')
         # Setting up video self.capture
         self.camera_number = camera_number
-        self.display_on_web = display_on_web
         print('Setting up camera {camera_number}'.format(camera_number=camera_number))
         self.capture = cv2.VideoCapture(camera_number)
-        self.initialize_stream = kwargs.get('create_stream')
+        self.initialize_stream = initialize_stream
         self.stream_port = stream_port
-        self.client_socket = None
 
         if self.initialize_stream:
             print('creating stream ...')
-            self.create_stream()
+            if self.stream_port == 0:
+                print("Port stream port is not set, canceling socket set up....")
+                self.initialize_stream = False
+                return False
+            self.server_address = ("0.0.0.0", self.stream_port)
+            self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            try:
+                self.client_socket.connect(self.server_address)
+                print('Connection established, streaming to port {port}'.format(port=self.stream_port))
+            except Exception as ex:
+                self.initialize_stream = False
+                print('Failed to create socket connection', ex)
 
     def initialise_camera(self):
         avg = None
@@ -69,7 +74,7 @@ class Camera:
             cv2.imshow('frame', frame)
 
             if self.initialize_stream:
-                self.client_socket.send(frame)
+                self.stream_image(frame)
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
@@ -106,19 +111,17 @@ class Camera:
 
         return motion_detected, frame, text
 
-    def create_stream(self):
-        if self.stream_port == 0:
-            print("Port stream port is not set, canceling socket set up....")
-            self.initialize_stream = False
-            return False
-        server_address = "0.0.0.0.0", self.stream_port
-        self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        print('Connection established, streaming to port {port}'.format(port=self.stream_port))
-        try:
-            self.client_socket.connect(server_address)
-        except socket as ex:
-            self.initialize_stream = False
-            print('Failed to create socket connection', ex)
+    def stream_image(self, frame):
+        if frame.any():
+            img = cv2.imencode(".jpg", frame)[1].tostring()
+            file_size = len(img)
+            length = pack('>Q', file_size)
+            try:
+                self.client_socket.send(length)
+                self.client_socket.sendall(img)
+            except Exception as ex:
+                print(ex)
+                self.initialize_stream = False
 
     @staticmethod
     def count_system_cameras(path='/dev/video*'):
@@ -133,5 +136,6 @@ class Camera:
             print("No cameras available exiting ....")
             sys.exit([1])
         return camera_positions
+
 
 
