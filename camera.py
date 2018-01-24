@@ -71,10 +71,10 @@ class Camera:
             cv2.putText(frame, "Room Status: {}".format(text), (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
             cv2.putText(frame, ts, (10, frame.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (0, 0, 255), 1)
 
-            cv2.imshow('frame', frame)
-
             if self.initialize_stream:
                 self.stream_image(frame)
+            else:
+                cv2.imshow('frame', frame)
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
