@@ -43,7 +43,7 @@ class Camera:
                 print('Connection established, streaming to port {port}'.format(port=self.stream_port))
             except Exception as ex:
                 self.initialize_stream = False
-                print('Failed to create socket connection', ex)
+                print('Failed to create socket connection: {stream_port}'.format(stream_port=self.stream_port), ex)
 
     def initialise_camera(self):
         avg = None
