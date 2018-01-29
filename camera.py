@@ -29,6 +29,9 @@ class Camera:
         self.capture = cv2.VideoCapture(camera_number)
         self.initialize_stream = initialize_stream
         self.stream_port = stream_port
+        self.resolution_width = kwargs.get('resolution_width')
+        self.resolution_height = kwargs.get('resolution_height')
+        self.set_camera_resolution(self.resolution_width, self.resolution_height)
 
         if self.initialize_stream:
             print('creating stream ...')
@@ -122,6 +125,16 @@ class Camera:
             except Exception as ex:
                 print(ex)
                 self.initialize_stream = False
+
+    def set_camera_resolution(self, width, height):
+        print('setting up camera resolution')
+        try:
+            self.capture.set(3, width)
+            self.capture.set(4, height)
+        except Exception as ex:
+            print('camera does not support resolution ', ex)
+
+
 
     @staticmethod
     def count_system_cameras(path='/dev/video*'):
