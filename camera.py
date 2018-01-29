@@ -32,6 +32,9 @@ class Camera:
         self.resolution_width = kwargs.get('resolution_width')
         self.resolution_height = kwargs.get('resolution_height')
         self.set_camera_resolution(self.resolution_width, self.resolution_height)
+        # todo create zoom functionality
+        # todo create record video option
+        # todo create email functionality
 
         if self.initialize_stream:
             print('creating stream ...')
