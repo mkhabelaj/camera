@@ -71,11 +71,13 @@ class Camera:
             if self.motion_detection:
                 result = self.motion_detector(gray, avg, frame, text)
                 text = result[2]
-
+            # todo add text percentage as a setting
+            height, width, channels = frame.shape
+            font_size = (width * 0.10)/100
             # draw the text and timestamp on the frame
             ts = timestamp.strftime("%A %d %B %Y %I:%M:%S%p")
-            cv2.putText(frame, "Room Status: {}".format(text), (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
-            cv2.putText(frame, ts, (10, frame.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (0, 0, 255), 1)
+            cv2.putText(frame, "Room Status: {}".format(text), (10, 20), cv2.FONT_HERSHEY_SIMPLEX, font_size, (0, 0, 255), 2)
+            cv2.putText(frame, ts, (10, frame.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX, font_size, (0, 0, 255), 1)
 
             if self.initialize_stream:
                 self.stream_image(frame)
