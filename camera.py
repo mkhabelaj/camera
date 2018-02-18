@@ -5,10 +5,11 @@ from glob import glob
 import sys
 import socket
 from struct import pack
+import time
 
 
 class Camera:
-    def __init__(self, camera_number, initialize_stream=False, stream_port=0, *args, **kwargs):
+    def __init__(self, camera_number, initialize_stream=False, stream_port=0, record_path='', *args, **kwargs):
         """
         :param camera_number: Video camera ID
         :param args:
@@ -27,11 +28,17 @@ class Camera:
         self.camera_number = camera_number
         print('Setting up camera {camera_number}'.format(camera_number=camera_number))
         self.capture = cv2.VideoCapture(camera_number)
+        self.fourcc = cv2.VideoWriter_fourcc(*'XVID')
+        self.out = cv2.VideoWriter('output1.avi', self.fourcc, 20.0, (640, 480))
         self.initialize_stream = initialize_stream
         self.stream_port = stream_port
         self.resolution_width = kwargs.get('resolution_width')
         self.resolution_height = kwargs.get('resolution_height')
         self.set_camera_resolution(self.resolution_width, self.resolution_height)
+        # self.image_path = kwargs.get('image_path')
+        self.record_path = record_path
+        self.is_recording = False
+        self.capture_image = kwargs.get('capture_image')
         # todo create zoom functionality
         # todo create record video option
         # todo create email functionality
@@ -83,6 +90,10 @@ class Camera:
                 self.stream_image(frame)
             else:
                 cv2.imshow('frame', frame)
+
+            self.record(frame)
+
+            self.save_image(frame)
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
@@ -138,6 +149,27 @@ class Camera:
             self.capture.set(4, height)
         except Exception as ex:
             print('camera does not support resolution ', ex)
+
+    def record(self, frame):
+        if self.record_motion:
+            if not self.is_recording and self.record_motion:
+                output = self.record_path + time.strftime("%Y%m%d-%H%M%S") + '.avi'
+                print(output)
+                self.fourcc = cv2.VideoWriter_fourcc(*'XVID')
+                self.out = cv2.VideoWriter(output, self.fourcc, 20.0, (640, 480))
+                self.is_recording = True
+            if self.is_recording:
+                self.out.write(frame)
+        else:
+            self.is_recording = False if self.is_recording else self.is_recording
+
+    def save_image(self, frame):
+        if self.capture_image:
+            output = self.record_path + time.strftime("%Y%m%d-%H%M%S") + '.jpg'
+            cv2.imwrite(output, frame)  # save frame as JPEG file
+            self.capture_image = False
+
+
 
 
 
